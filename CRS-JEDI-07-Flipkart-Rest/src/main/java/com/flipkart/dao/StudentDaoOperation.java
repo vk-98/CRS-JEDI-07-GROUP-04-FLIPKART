@@ -24,40 +24,48 @@ public class StudentDaoOperation implements StudentDaoInterface {
     private static Logger logger = Logger.getLogger(StudentDaoOperation.class);
 
     /**
-     * Method to add Student
-     * @return boolean indicating if the student is added successfully
+     * Method to add Student to Database
+     *
+     * @param studentName     Name of the Student
+     * @param studentEmailId  EmailId of the Student
+     * @param studentPassword Password for the Student
+     * @param studentPhoneNo  Phone Number of the Student
+     * @return returns true if student is added successfully to the database
      */
     @Override
-    public boolean addStudent(String studentName, String studentEmailId, String studentPassword, String studentPhoneNo) {
+    public boolean addStudent(String studentName, String studentEmailId, String studentPassword, String studentPhoneNo) throws SQLException {
         UserDaoInterface userDaoInterface = new UserDaoOperation();
+        try {
+            boolean isSuccess = userDaoInterface.createUser(studentName, studentEmailId, studentPassword, Roles.Student, studentPhoneNo);
 
-        boolean isSuccess = userDaoInterface.createUser(studentName, studentEmailId, studentPassword, Roles.Student, studentPhoneNo);
+            if (isSuccess) {
+                int id = userDaoInterface.getUserIdByEmail(studentEmailId);
+                try {
+                    PreparedStatement ps = conn.prepareStatement(SqlQueries.ADD_STUDENT);
+                    ps.setInt(1, id);
+                    ps.setInt(2, 0);
 
-        if (isSuccess) {
-            int id = userDaoInterface.getUserIdByEmail(studentEmailId);
-            try {
-                PreparedStatement ps = conn.prepareStatement(SqlQueries.ADD_STUDENT);
-                ps.setInt(1, id);
-                ps.setInt(2, 0);
+                    int rowAffected = ps.executeUpdate();
 
-                int rowAffected = ps.executeUpdate();
+                    return (rowAffected == 1);
 
-                return (rowAffected == 1);
-
-            } catch (SQLException e) {
-                logger.info("Error: " + e.getMessage());
+                } catch (SQLException e) {
+                    logger.info("Error: " + e.getMessage());
+                }
             }
+        } catch (SQLException e) {
+            logger.info("Error: " + e.getMessage());
+            throw e;
         }
         return false;
     }
 
 
-
     /**
-     * Method to get student object from studentID
-     * @param studentId
-     * @return student object or null if no matching student found
-     * @throws SQLException
+     * Method for getting student by Email Id
+     *
+     * @param emailId Email Id of the Student
+     * @return Returns Student Object
      */
     @Override
     public Student getStudentByEmailId(String emailId) {
@@ -65,7 +73,7 @@ public class StudentDaoOperation implements StudentDaoInterface {
             PreparedStatement ps = conn.prepareStatement(SqlQueries.GET_STUDENT_BY_EMAIL_ID);
             ps.setString(1, emailId);
             ResultSet rs = ps.executeQuery();
-            if(rs.next()) {
+            if (rs.next()) {
                 Student st = new Student();
                 st.setStudentId(rs.getInt("id"));
                 st.setUserEmailId(rs.getString("email"));
@@ -81,9 +89,10 @@ public class StudentDaoOperation implements StudentDaoInterface {
     }
 
     /**
-     * method for getiing student by student Id
-     * @param studentId
-     * @return
+     * Method for getting student by student Id
+     *
+     * @param studentId Unique Id of the Student
+     * @return Returns Student Object
      */
     @Override
     public Student getStudentByStudentId(int studentId) {
@@ -91,7 +100,7 @@ public class StudentDaoOperation implements StudentDaoInterface {
             PreparedStatement ps = conn.prepareStatement(SqlQueries.GET_STUDENT_BY_STUDENT_ID);
             ps.setInt(1, studentId);
             ResultSet rs = ps.executeQuery();
-            if(rs.next()) {
+            if (rs.next()) {
                 Student st = new Student();
                 st.setId(studentId);
                 st.setApproved(rs.getInt("isApproved") == 1);
@@ -103,6 +112,12 @@ public class StudentDaoOperation implements StudentDaoInterface {
         return null;
     }
 
+    /**
+     * Method to get Grades of a Student
+     *
+     * @param studentId Unique Id of the Student
+     * @return List of Grades
+     */
     @Override
     public List<Grade> getGrades(int studentId) {
         try {

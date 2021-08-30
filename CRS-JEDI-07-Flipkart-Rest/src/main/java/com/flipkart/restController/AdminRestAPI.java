@@ -3,9 +3,10 @@ package com.flipkart.restController;
 import com.flipkart.bean.Course;
 import com.flipkart.bean.Professor;
 import com.flipkart.bean.Student;
-import com.flipkart.bean.User;
 import com.flipkart.business.*;
 import com.flipkart.constants.Roles;
+import com.flipkart.exceptions.RESTResponseException;
+import org.apache.log4j.Logger;
 
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
@@ -20,6 +21,7 @@ import java.util.List;
  */
 @Path("/admin")
 public class AdminRestAPI {
+    Logger logger = Logger.getLogger(AdminRestAPI.class);
     UserInterface userInterface = new UserOperation();
     AdminInterface adminInterface = new AdminOperation();
     CourseInterface courseInterface = new CourseOperation();
@@ -35,6 +37,7 @@ public class AdminRestAPI {
     @Consumes(MediaType.APPLICATION_JSON)
     public List<Course> getCourses() {
         if (UserOperation.user == null || !UserOperation.user.getRole().equals(Roles.Admin)) {
+            logger.info("Error: User not authenticated.");
             return null;
         }
         return courseInterface.getCourses();
@@ -52,12 +55,14 @@ public class AdminRestAPI {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response addCourse(@NotNull Course course) {
         if (UserOperation.user == null) {
+            logger.info("Error: User not authenticated.");
             return Response
                     .status(401)
                     .entity("Login Required.")
                     .build();
         }
         if (!UserOperation.user.getRole().equals(Roles.Admin)) {
+            logger.info("Error: Access Denied");
             return Response
                     .status(403)
                     .entity("Access Denied")
@@ -93,36 +98,41 @@ public class AdminRestAPI {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response addProfessor(@NotNull Professor professor) {
         if (UserOperation.user == null) {
+            logger.info("Error: User not authenticated.");
             return Response
                     .status(401)
                     .entity("Login Required.")
                     .build();
         }
         if (!UserOperation.user.getRole().equals(Roles.Admin)) {
+            logger.info("Error: Access Denied");
             return Response
                     .status(403)
                     .entity("Access Denied")
                     .build();
         }
-
-        boolean isProfessorAdded = adminInterface.addProfessor(
-                professor.getUserName(),
-                professor.getUserEmailId(),
-                professor.getUserPassword(),
-                professor.getPhoneNo(),
-                professor.getDepartment(),
-                professor.getDesignation()
-        );
-        if (isProfessorAdded) {
+        try {
+            boolean isProfessorAdded = adminInterface.addProfessor(
+                    professor.getUserName(),
+                    professor.getUserEmailId(),
+                    professor.getUserPassword(),
+                    professor.getPhoneNo(),
+                    professor.getDepartment(),
+                    professor.getDesignation()
+            );
+            if (isProfessorAdded) {
+                return Response
+                        .status(201)
+                        .entity("Professor Added Successfully.")
+                        .build();
+            }
             return Response
-                    .status(201)
-                    .entity("Professor Added Successfully.")
+                    .status(204)
+                    .entity("Professor cannot be added.")
                     .build();
+        } catch (Exception e) {
+            throw new RESTResponseException("Error: " + e.getMessage(), 400);
         }
-        return Response
-                .status(204)
-                .entity("Professor cannot be added.")
-                .build();
     }
 
     /**
@@ -137,29 +147,34 @@ public class AdminRestAPI {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response removeCourse(@NotNull Course course) {
         if (UserOperation.user == null) {
+            logger.info("Error: User not authenticated.");
             return Response
                     .status(401)
                     .entity("Login Required.")
                     .build();
         }
         if (!UserOperation.user.getRole().equals(Roles.Admin)) {
+            logger.info("Error: Access Denied");
             return Response
                     .status(403)
                     .entity("Access Denied")
                     .build();
         }
-
-        boolean isCourseRemoved = adminInterface.removeCourse(course.getCourseId());
-        if (isCourseRemoved) {
+        try {
+            boolean isCourseRemoved = adminInterface.removeCourse(course.getCourseId());
+            if (isCourseRemoved) {
+                return Response
+                        .status(204)
+                        .entity("Course Removed Successfully.")
+                        .build();
+            }
             return Response
-                    .status(204)
-                    .entity("Course Removed Successfully.")
+                    .status(400)
+                    .entity("Course cannot be removed.")
                     .build();
+        } catch (Exception e) {
+            throw new RESTResponseException(e.getMessage(), 400);
         }
-        return Response
-                .status(400)
-                .entity("Course cannot be removed.")
-                .build();
     }
 
     /**
@@ -173,6 +188,7 @@ public class AdminRestAPI {
     @Consumes(MediaType.APPLICATION_JSON)
     public List<Professor> getProfessors() {
         if (UserOperation.user == null || !UserOperation.user.getRole().equals(Roles.Admin)) {
+            logger.info("Error: User not authenticated.");
             return null;
         }
         return adminInterface.getProfessors();
@@ -189,6 +205,7 @@ public class AdminRestAPI {
     @Consumes(MediaType.APPLICATION_JSON)
     public List<Student> getAdmissionRequests() {
         if (UserOperation.user == null || !UserOperation.user.getRole().equals(Roles.Admin)) {
+            logger.info("Error: User not authenticated.");
             return null;
         }
         return adminInterface.getAdmissionRequests();
@@ -206,65 +223,34 @@ public class AdminRestAPI {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response approveAdmissionRequest(@NotNull Student student) {
         if (UserOperation.user == null) {
+            logger.info("Error: User not authenticated.");
             return Response
                     .status(401)
                     .entity("Login Required.")
                     .build();
         }
         if (!UserOperation.user.getRole().equals(Roles.Admin)) {
+            logger.info("Error: Access Denied");
             return Response
                     .status(403)
                     .entity("Access Denied")
                     .build();
         }
-
-        boolean isApproved = adminInterface.approveStudentRequest(student.getStudentId());
-        if (isApproved) {
+        try {
+            boolean isApproved = adminInterface.approveStudentRequest(student.getStudentId());
+            if (isApproved) {
+                return Response
+                        .status(200)
+                        .entity("Admission Request for student with student ID: " + student.getStudentId() + " approved successfully.")
+                        .build();
+            }
             return Response
-                    .status(200)
-                    .entity("Admission Request for student with student ID: " + student.getStudentId() + " approved successfully.")
+                    .status(400)
+                    .entity("Admission Request for student with student ID: " + student.getStudentId() + " cannot be approved.")
                     .build();
-        }
-        return Response
-                .status(400)
-                .entity("Admission Request for student with student ID: " + student.getStudentId() + " cannot be approved.")
-                .build();
-    }
-
-    /**
-     * Endpoint for updating password
-     *
-     * @param user User
-     * @return isPasswordUpdated
-     */
-    @PUT
-    @Path("/updatepassword")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    public Response updatePassword(@NotNull User user) {
-        if (UserOperation.user == null) {
-            return Response
-                    .status(401)
-                    .entity("Login Required.")
-                    .build();
-        }
-        if (!UserOperation.user.getRole().equals(Roles.Admin)) {
-            return Response
-                    .status(403)
-                    .entity("Access Denied")
-                    .build();
+        } catch (Exception e) {
+            throw new RESTResponseException(e.getMessage(), 400);
         }
 
-        boolean passwordUpdated = userInterface.updateUserPassword(user.getUserPassword());
-        if (passwordUpdated) {
-            return Response
-                    .status(200)
-                    .entity("Password Updated Successfully.")
-                    .build();
-        }
-        return Response
-                .status(400)
-                .entity("Something went wrong.")
-                .build();
     }
 }

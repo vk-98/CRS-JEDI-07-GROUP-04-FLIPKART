@@ -8,19 +8,34 @@ public class OptedCourse extends Course {
     private int courseId;
     private boolean isPrimary;
 
+    /**
+     * Getter for CourseId
+     *
+     * @return CourseId
+     */
     public int getCourseId() {
         return courseId;
     }
 
+    /**
+     * Setter for CourseId
+     *
+     * @param courseId Unique Id of the Course
+     */
     public void setCourseId(int courseId) {
         this.courseId = courseId;
     }
 
+    /**
+     * Method to check if opted course is primary
+     *
+     * @return return true if opted course is primary
+     */
     public boolean getIsPrimary() {
         return isPrimary;
     }
 
-    public void setIsPrimary(boolean isPrimary) {
-        this.isPrimary = isPrimary;
+    public void setIsPrimary(boolean primary) {
+        isPrimary = primary;
     }
 }

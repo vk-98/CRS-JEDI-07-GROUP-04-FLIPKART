@@ -4,9 +4,11 @@ import com.flipkart.bean.Grade;
 import com.flipkart.bean.GradeCard;
 import com.flipkart.bean.Student;
 import com.flipkart.dao.*;
+import com.flipkart.exceptions.PaymentIncompleteException;
 import com.flipkart.exceptions.StudentNotRegisteredException;
 import org.apache.log4j.Logger;
 
+import java.sql.SQLException;
 import java.util.List;
 
 /**
@@ -23,14 +25,14 @@ public class StudentOperation implements StudentInterface {
     /**
      * method for registering a student
      *
-     * @param studentName
-     * @param studentEmailId
-     * @param studentPassword
-     * @param studentPhoneNo
-     * @return
+     * @param studentName     name of the Student
+     * @param studentEmailId  emailId of the Student
+     * @param studentPassword password for the Student
+     * @param studentPhoneNo  Phone No of the Student
+     * @return returns registered Student object
      */
     @Override
-    public Student register(String studentName, String studentEmailId, String studentPassword, String studentPhoneNo) {
+    public Student register(String studentName, String studentEmailId, String studentPassword, String studentPhoneNo) throws StudentNotRegisteredException, SQLException {
         Student student = null;
         try {
             StudentDaoInterface studentDao = new StudentDaoOperation();
@@ -41,8 +43,10 @@ public class StudentOperation implements StudentInterface {
                 student = new Student(studentName, studentEmailId, studentPassword, studentPhoneNo);
             }
         } catch (StudentNotRegisteredException ex) {
-            logger.info(logger.getClass());
             logger.error(ex.getStudentName() + " is not registered.");
+            throw ex;
+        } catch (SQLException ex) {
+            throw ex;
         }
         return student;
     }
@@ -54,15 +58,21 @@ public class StudentOperation implements StudentInterface {
      */
     @Override
     public List<Grade> getGrades() {
-        boolean isRegistered = semesterRegistrationDaoInterface.getRegistrationStatus();
-        if (!isRegistered) {
-            logger.info("Student is not registered for the semester");
-            return null;
-        }
+        try {
+            boolean isRegistered = semesterRegistrationDaoInterface.getRegistrationStatus(StudentOperation.student.getStudentId());
+            if (!isRegistered) {
+                throw new StudentNotRegisteredException(StudentOperation.student.getUserName());
+            }
 
-        boolean paymentStatus = semesterRegistrationDaoInterface.getPaymentStatus();
-        if (paymentStatus) {
+            boolean paymentStatus = semesterRegistrationDaoInterface.getPaymentStatus(StudentOperation.student.getStudentId());
+            if (!paymentStatus) throw new PaymentIncompleteException(StudentOperation.student.getUserName());
+
             return studentDaoInterface.getGrades(StudentOperation.student.getStudentId());
+
+        } catch (StudentNotRegisteredException e) {
+            logger.info(e.getMessage());
+        } catch (PaymentIncompleteException e) {
+            logger.info(e.getMessage());
         }
         return null;
     }
@@ -73,15 +83,18 @@ public class StudentOperation implements StudentInterface {
      * @return list of grades
      */
     @Override
-    public GradeCard getGradeCard() {
-        boolean isRegistered = semesterRegistrationDaoInterface.getRegistrationStatus();
-        if (!isRegistered) {
-            logger.info("Student is not registered for the semester");
-            return null;
-        }
+    public GradeCard getGradeCard() throws StudentNotRegisteredException, PaymentIncompleteException, SQLException {
+        try {
+            boolean isRegistered = semesterRegistrationDaoInterface.getRegistrationStatus(StudentOperation.student.getStudentId());
+            if (!isRegistered) {
+                throw new StudentNotRegisteredException(StudentOperation.student.getUserName());
+            }
 
-        boolean paymentStatus = semesterRegistrationDaoInterface.getPaymentStatus();
-        if (paymentStatus) {
+            boolean paymentStatus = semesterRegistrationDaoInterface.getPaymentStatus(StudentOperation.student.getStudentId());
+            if (!paymentStatus) {
+                throw new PaymentIncompleteException(StudentOperation.student.getUserName());
+            }
+
             GradeCard gradeCard = new GradeCard();
             List<Grade> grades = studentDaoInterface.getGrades(StudentOperation.student.getStudentId());
             gradeCard.setGrades(grades);
@@ -91,13 +104,18 @@ public class StudentOperation implements StudentInterface {
             }
             gradeCard.setCgpa(gradeSum / grades.size());
             return gradeCard;
+
+        } catch (StudentNotRegisteredException e) {
+            logger.info("Error: " + e.getMessage());
+            throw e;
+        } catch (PaymentIncompleteException e) {
+            logger.info("Error: " + e.getMessage());
+            throw e;
         }
-        return null;
     }
 
-
     /**
-     * method for getting student by emailid
+     * method for getting student by emailId
      */
     @Override
     public void getStudentByEmailId() {

@@ -1,6 +1,12 @@
 package com.flipkart.exceptions;
 
-public class NoRegisteredCourseException extends Exception{
-    public static String msg="No courses have been registered";
-
+/**
+ * @author JEDI-07
+ * NoRegisterdCourseException
+ */
+public class NoRegisteredCourseException extends Exception {
+    public static String msg = "No courses have been registered/selected";
+    public NoRegisteredCourseException() {
+        super(msg);
+    }
 }

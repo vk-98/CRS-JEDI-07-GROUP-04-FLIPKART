@@ -11,35 +11,23 @@ public class SqlQueries {
 
     public static final String ADD_SEMESTER_REGISTRATION = "insert into semesterregistration(studentId,registrationStatus,feeStatus) values (?, 0, 0)";
 
-    public static final String VIEW_COURSES_QUERY = "select * from course";
-
-    public static final String VIEW_OPTED_COURSE_QUERY = "select * from optedCourse where studentId=?";
-
     public static final String UPDATE_PASSWORD = "UPDATE user SET password = ? WHERE id = ?";
 
     public static final String VIEW_REGISTERED_STUDENT_COURSES = "SELECT course.id, course.courseName, course.courseFee, course.professorId, course.studentCount, optedcourse.isPrimary FROM course INNER JOIN optedcourse ON course.id=optedcourse.courseId WHERE optedcourse.studentId = ? AND optedcourse.isAllotted=1";
 
     public static final String VIEW_SELECTED_STUDENT_COURSES = "SELECT course.id, course.courseName, course.courseFee, course.professorId, course.studentCount, optedcourse.isPrimary FROM course INNER JOIN optedcourse ON course.id=optedcourse.courseId WHERE optedcourse.studentId = ?";
 
-    public static final String CALCULATE_FEES = "select SUM(courseFee) from course where id IN (select courseId from optedCourse where studentId=? AND isAllotted=1)";
-
     public static final String ADD_STUDENT = "insert into student (userId,isApproved) values (?,?)";
 
-    public static final String GET_STUDENT_COUNT = "select count(*) from optedCourse where courseId=?";
+    public static final String ADD_COURSE_STUDENT = "insert into optedCourse (courseId,semesterRegistrationId,isPrimary,isAllotted,studentId) values ( ?, ?, ?, 0, ? )";
 
-    public static final String ADD_COURSE_STUDENT = "INSERT INTO optedcourse (courseId,semesterRegistrationId,isPrimary,isAllotted,studentId) values ( ?, ?, ?, ?, ? )";
-
-    public static final String DROP_COURSE = "delete from optedcourse where studentId=? AND courseId = ?";
+    public static final String DROP_COURSE = "delete from optedCourse where studentId=? AND courseId = ?";
 
     public static final String CHECK_COURSE_STUDENT = "select * from optedCourse where studentId=? AND courseId=?";
 
     public static final String GET_USER_ID = "select id from user where email = ? ";
 
-    public static final String SET_REGISTRATION_STATUS = "update semesterregistration set registrationStatus=? where studentId=?";
-
     public static final String GET_REGISTRATION_STATUS = "select registrationStatus from semesterregistration where studentId=?";
-
-    public static final String SET_PAYMENT_STATUS = "update semesterregistration set feeStatus=? where studentId=?";
 
     public static final String GET_PAYMENT_STATUS = "select feeStatus from semesterregistration where studentId=?";
 

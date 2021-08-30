@@ -31,7 +31,7 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$USER_HOME$/JEDI/log4j-1.2.11.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../log4j-1.2.11.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />

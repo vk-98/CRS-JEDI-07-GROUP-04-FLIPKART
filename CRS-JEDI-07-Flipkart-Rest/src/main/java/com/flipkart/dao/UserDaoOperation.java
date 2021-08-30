@@ -1,6 +1,5 @@
 package com.flipkart.dao;
 
-import com.flipkart.application.CRSApplicationClient;
 import com.flipkart.bean.User;
 import com.flipkart.constants.SqlQueries;
 import com.flipkart.utils.DBUtil;
@@ -16,14 +15,15 @@ import java.sql.SQLException;
  * Implementation of User Dao Interface
  */
 public class UserDaoOperation implements UserDaoInterface {
-    private static Logger logger = Logger.getLogger(CRSApplicationClient.class);
+    private static Logger logger = Logger.getLogger(UserDaoOperation.class);
     static Connection conn = DBUtil.getConnection();
 
     /**
      * method for authenticating the user with database
-     * @param emailId
-     * @param password
-     * @return isAuthenticated
+     *
+     * @param emailId  emailId of User
+     * @param password Password of the user
+     * @return Returns Authenticated User Object
      */
     @Override
     public User authenticate(String emailId, String password) {
@@ -52,18 +52,19 @@ public class UserDaoOperation implements UserDaoInterface {
 
     /**
      * method for updating user password
-     * @param userId
-     * @param newPassword
-     * @return
+     *
+     * @param userId      Unique Id of the User
+     * @param newPassword Password to be set
+     * @return returns true if password is updated successfully
      */
     @Override
     public boolean updatePassword(int userId, String newPassword) {
         try {
             PreparedStatement ps = conn.prepareStatement(SqlQueries.UPDATE_PASSWORD);
-            ps.setString(1,newPassword);
+            ps.setString(1, newPassword);
             ps.setInt(2, userId);
             return ps.executeUpdate() == 1;
-        }catch (SQLException e){
+        } catch (SQLException e) {
             logger.info("Error: " + e.getMessage());
         }
         return false;
@@ -71,16 +72,17 @@ public class UserDaoOperation implements UserDaoInterface {
 
 
     /**
-     * method for crearting a user
-     * @param name
-     * @param email
-     * @param password
-     * @param role
-     * @param phoneNo
-     * @return IsUserCreated
+     * method for creating a user
+     *
+     * @param name     name of the User
+     * @param email    Email Id of the User
+     * @param password Password of the User
+     * @param role     Role of the User
+     * @param phoneNo  PhoneNo of the User
+     * @return returns true if the user is created successfully
      */
     @Override
-    public boolean createUser(String name, String email, String password, String role, String phoneNo) {
+    public boolean createUser(String name, String email, String password, String role, String phoneNo) throws SQLException {
         try {
             PreparedStatement ps = conn.prepareStatement(SqlQueries.ADD_USER_QUERY);
             ps.setString(1, name);
@@ -93,10 +95,16 @@ public class UserDaoOperation implements UserDaoInterface {
             return rowAffected == 1;
         } catch (SQLException e) {
             logger.info("Error: " + e.getMessage());
+            throw e;
         }
-        return false;
     }
 
+    /**
+     * Method to get UserId by EmailId
+     *
+     * @param email EmailId of the User
+     * @return returns UserId
+     */
     public int getUserIdByEmail(String email) {
         try {
             PreparedStatement ps = conn.prepareStatement(SqlQueries.GET_USER_ID);

@@ -1,9 +1,7 @@
 package com.flipkart.business;
 
-import com.flipkart.application.CRSApplicationClient;
-import com.flipkart.bean.Student;
 import com.flipkart.bean.User;
-import com.flipkart.constants.Roles;
+import com.flipkart.dao.UserDaoInterface;
 import com.flipkart.dao.UserDaoOperation;
 import org.apache.log4j.Logger;
 
@@ -12,38 +10,38 @@ import org.apache.log4j.Logger;
  * Implementation of User Interface
  */
 public class UserOperation implements UserInterface {
-    private static Logger logger = Logger.getLogger(CRSApplicationClient.class);
+    private static Logger logger = Logger.getLogger(UserOperation.class);
     public static User user = null;
-    UserDaoOperation userDaoOperation = new UserDaoOperation();
+    UserDaoInterface userDaoInterface = new UserDaoOperation();
 
     /**
      * method for validating user with email and password
      *
-     * @param emailId
-     * @param password
-     * @return isAutheniticated
+     * @param emailId  emailId of the User
+     * @param password password for the User
+     * @return returns true if validation is successful
      */
     @Override
     public boolean validateUser(String emailId, String password) {
-        user = userDaoOperation.authenticate(emailId, password);
+        user = userDaoInterface.authenticate(emailId, password);
         return (user != null);
     }
 
     /**
      * method for updating user password
      *
-     * @param newPassword
-     * @return isPasswordUpdated
+     * @param newPassword New Password of the user
+     * @return returns true if Password is Updated
      */
     @Override
     public boolean updateUserPassword(String newPassword) {
-        return userDaoOperation.updatePassword(user.getId(), newPassword);
+        return userDaoInterface.updatePassword(user.getId(), newPassword);
     }
 
     /**
      * method for logging out the user.
      *
-     * @return isUserLoggedOut
+     * @return returns true if user logged out successfully
      */
     public boolean logout() {
         user = null;

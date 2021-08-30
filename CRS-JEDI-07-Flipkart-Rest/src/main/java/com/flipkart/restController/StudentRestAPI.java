@@ -4,6 +4,9 @@ package com.flipkart.restController;
 import com.flipkart.bean.*;
 import com.flipkart.business.*;
 import com.flipkart.constants.Roles;
+import com.flipkart.exceptions.RESTResponseException;
+import org.apache.log4j.Logger;
+
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -16,7 +19,7 @@ import java.util.List;
  */
 @Path("/student")
 public class StudentRestAPI {
-
+    Logger logger = Logger.getLogger(StudentRestAPI.class);
     CourseInterface courseInterface = new CourseOperation();
     StudentInterface studentInterface = new StudentOperation();
     NotificationInterface notificationInterface = new NotificationOperation();
@@ -34,6 +37,7 @@ public class StudentRestAPI {
     @Consumes(MediaType.APPLICATION_JSON)
     public List<Course> getCourses() {
         if (UserOperation.user == null || !UserOperation.user.getRole().equals(Roles.Student)) {
+            logger.info("Error: User not authenticated.");
             return null;
         }
         return courseInterface.getCourses();
@@ -50,9 +54,14 @@ public class StudentRestAPI {
     @Consumes(MediaType.APPLICATION_JSON)
     public GradeCard getGradeCard() {
         if (UserOperation.user == null || !UserOperation.user.getRole().equals(Roles.Student)) {
+            logger.info("Error: User not authenticated.");
             return null;
         }
-        return studentInterface.getGradeCard();
+        try {
+            return studentInterface.getGradeCard();
+        } catch (Exception e) {
+            throw new RESTResponseException("Error: " + e.getMessage(), 400);
+        }
     }
 
 
@@ -67,6 +76,7 @@ public class StudentRestAPI {
     @Consumes(MediaType.APPLICATION_JSON)
     public List<Notification> showNotifications() {
         if (UserOperation.user == null || !UserOperation.user.getRole().equals(Roles.Student)) {
+            logger.info("Error: User not authenticated.");
             return null;
         }
         return notificationInterface.getNotifications();
@@ -77,18 +87,20 @@ public class StudentRestAPI {
      *
      * @return isPayementDone
      */
-    @GET
+    @POST
     @Path("/payfee")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public Response payfee() {
         if (UserOperation.user == null) {
+            logger.info("Error: User not authenticated.");
             return Response
                     .status(401)
                     .entity("Login Required.")
                     .build();
         }
         if (!UserOperation.user.getRole().equals(Roles.Student) || !StudentOperation.student.isApproved()) {
+            logger.info("Error: Access Denied");
             return Response
                     .status(403)
                     .entity("Access Denied")
@@ -119,23 +131,28 @@ public class StudentRestAPI {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response addcourse(OptedCourse optedCourse) {
         if (UserOperation.user == null) {
+            logger.info("Error: User not authenticated.");
             return Response
                     .status(401)
                     .entity("Login Required.")
                     .build();
         }
         if (!UserOperation.user.getRole().equals(Roles.Student) || !StudentOperation.student.isApproved()) {
+            logger.info("Error: Access Denied");
             return Response
                     .status(403)
                     .entity("Access Denied")
                     .build();
         }
-
-        boolean isCourseAdded = semesterRegistrationInterface.addCourse(optedCourse.getCourseId(), optedCourse.getIsPrimary() ? 1 : 0);
-        if (isCourseAdded) {
-            return Response.status(201).entity("Course with course id: " + optedCourse.getCourseId() + " added successfully").build();
+        try {
+            boolean isCourseAdded = semesterRegistrationInterface.addCourse(optedCourse.getCourseId(), optedCourse.getIsPrimary() ? 1 : 0);
+            if (isCourseAdded) {
+                return Response.status(201).entity("Course with course id: " + optedCourse.getCourseId() + " added successfully").build();
+            }
+            return Response.status(200).entity("Course with course id: " + optedCourse.getCourseId() + " cannot be added").build();
+        } catch (Exception e) {
+            throw new RESTResponseException("Error: " + e.getMessage(), 400);
         }
-        return Response.status(200).entity("Course with course id: " + optedCourse.getCourseId() + " cannot be added").build();
     }
 
 
@@ -151,29 +168,35 @@ public class StudentRestAPI {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response dropcourse(OptedCourse optedCourse) {
         if (UserOperation.user == null) {
+            logger.info("Error: User not authenticated.");
             return Response
                     .status(401)
                     .entity("Login Required.")
                     .build();
         }
         if (!UserOperation.user.getRole().equals(Roles.Student) || !StudentOperation.student.isApproved()) {
+            logger.info("Error: Access Denied");
             return Response
                     .status(403)
                     .entity("Access Denied")
                     .build();
         }
-
-        boolean isCourseDropped = semesterRegistrationInterface.dropCourse(optedCourse.getCourseId());
-        if (isCourseDropped) {
+        try {
+            boolean isCourseDropped = semesterRegistrationInterface.dropCourse(optedCourse.getCourseId());
+            if (isCourseDropped) {
+                return Response
+                        .status(201)
+                        .entity("Course with course id: " + optedCourse.getCourseId() + " dropped successfully")
+                        .build();
+            }
             return Response
-                    .status(201)
-                    .entity("Course with course id: " + optedCourse.getCourseId() + " dropped successfully")
+                    .status(200)
+                    .entity("Course with course id: " + optedCourse.getCourseId() + " cannot be dropped")
                     .build();
+        } catch (Exception e) {
+            throw new RESTResponseException("Error: " + e.getMessage(), 400);
         }
-        return Response
-                .status(200)
-                .entity("Course with course id: " + optedCourse.getCourseId() + " cannot be dropped")
-                .build();
+
     }
 
     /**
@@ -188,12 +211,18 @@ public class StudentRestAPI {
     @Consumes(MediaType.APPLICATION_JSON)
     public List<OptedCourse> getCourses(@QueryParam("selected") int selected) {
         if (UserOperation.user == null || !UserOperation.user.getRole().equals(Roles.Student)) {
+            logger.info("Error: User not authenticated.");
             return null;
         }
-        if (selected == 1) {
-            return semesterRegistrationInterface.getSelectedCourses();
+        try {
+            if (selected == 1) {
+                return semesterRegistrationInterface.getSelectedCourses();
+            }
+            return semesterRegistrationInterface.getRegisteredCourses();
+        } catch (Exception e) {
+            throw new RESTResponseException("Error: " + e.getMessage(), 400);
         }
-        return semesterRegistrationInterface.getRegisteredCourses();
+
     }
 
     /**
@@ -201,71 +230,39 @@ public class StudentRestAPI {
      *
      * @return isSemesterSubmitted
      */
-    @GET
+    @POST
     @Path("/semester/submit")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public Response submit() {
         if (UserOperation.user == null) {
+            logger.info("Error: User not authenticated.");
             return Response
                     .status(401)
                     .entity("Login Required.")
                     .build();
         }
         if (!UserOperation.user.getRole().equals(Roles.Student) || !StudentOperation.student.isApproved()) {
+            logger.info("Error: Access Denied");
             return Response
                     .status(403)
                     .entity("Access Denied")
                     .build();
         }
-
-        boolean isSubmitted = semesterRegistrationInterface.submitCourseChoices();
-        if (isSubmitted) {
+        try {
+            boolean isSubmitted = semesterRegistrationInterface.submitCourseChoices();
+            if (isSubmitted) {
+                return Response
+                        .status(200)
+                        .entity("Course choices for semester submitted successfully.")
+                        .build();
+            }
             return Response
                     .status(200)
-                    .entity("Course choices for semester submitted successfully.")
+                    .entity("Something went wrong.")
                     .build();
+        } catch (Exception e) {
+            throw new RESTResponseException("Error: " + e.getMessage(), 400);
         }
-        return Response
-                .status(200)
-                .entity("Something went wrong.")
-                .build();
-    }
-
-    /**
-     * Endpoint for updating password
-     *
-     * @param user User
-     * @return isPasswordUpdated
-     */
-    @PUT
-    @Path("/updatepassword")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    public Response updatePassword(@NotNull User user) {
-        if (UserOperation.user == null) {
-            return Response
-                    .status(401)
-                    .entity("Login Required.")
-                    .build();
-        }
-        if (!UserOperation.user.getRole().equals(Roles.Student) || !StudentOperation.student.isApproved()) {
-            return Response
-                    .status(403)
-                    .entity("Access Denied")
-                    .build();
-        }
-
-        boolean passwordUpdated = userInterface.updateUserPassword(user.getUserPassword());
-        if (passwordUpdated) {
-            return Response
-                    .status(200)
-                    .entity("Password Updated Successfully.")
-                    .build();
-        }
-        return Response
-                .status(400)
-                .entity("Something went wrong.")
-                .build();
     }
 }
