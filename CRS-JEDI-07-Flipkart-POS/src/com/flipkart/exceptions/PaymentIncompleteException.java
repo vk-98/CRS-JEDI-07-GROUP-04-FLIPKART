@@ -4,7 +4,7 @@ package com.flipkart.exceptions;
  * @author JEDI-07
  * StudentNotRegisteredException
  */
-public class StudentNotRegisteredException extends Exception {
+public class PaymentIncompleteException extends Exception {
     private String studentName;
 
     /**
@@ -12,7 +12,7 @@ public class StudentNotRegisteredException extends Exception {
      *
      * @param studentName: name of the student
      */
-    public StudentNotRegisteredException(String studentName) {
+    public PaymentIncompleteException(String studentName) {
         this.studentName = studentName;
     }
 
@@ -27,6 +27,6 @@ public class StudentNotRegisteredException extends Exception {
 
     @Override
     public String getMessage() {
-        return studentName + "is not registered for the semester.";
+        return "Payment incomplete for " + studentName;
     }
 }

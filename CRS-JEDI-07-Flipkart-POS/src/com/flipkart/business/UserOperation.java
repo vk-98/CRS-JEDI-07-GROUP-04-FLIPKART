@@ -1,9 +1,7 @@
 package com.flipkart.business;
 
 import com.flipkart.application.CRSApplicationClient;
-import com.flipkart.bean.Student;
 import com.flipkart.bean.User;
-import com.flipkart.constants.Roles;
 import com.flipkart.dao.UserDaoOperation;
 import org.apache.log4j.Logger;
 
@@ -12,7 +10,7 @@ import org.apache.log4j.Logger;
  * Implementation of User Interface
  */
 public class UserOperation implements UserInterface {
-    private static Logger logger = Logger.getLogger(CRSApplicationClient.class);
+    private static Logger logger = Logger.getLogger(UserOperation.class);
     public static User user = null;
     UserDaoOperation userDaoOperation = new UserDaoOperation();
 
@@ -47,6 +45,8 @@ public class UserOperation implements UserInterface {
      */
     public boolean logout() {
         user = null;
+        StudentOperation.student = null;
+        ProfessorOperation.professor = null;
         return true;
     }
 }

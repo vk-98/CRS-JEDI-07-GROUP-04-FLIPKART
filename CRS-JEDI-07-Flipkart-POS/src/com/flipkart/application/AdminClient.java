@@ -8,6 +8,7 @@ import com.flipkart.bean.Course;
 import com.flipkart.bean.Professor;
 import com.flipkart.bean.Student;
 import com.flipkart.business.*;
+import com.flipkart.utils.HelperMethods;
 import org.apache.log4j.Logger;
 
 /**
@@ -99,12 +100,14 @@ public class AdminClient {
             logger.info("No Available Courses");
         } else {
             Formatter fmt = new Formatter();
+            fmt.format(HelperMethods.repeat("-", 180) + "\n");
             fmt.format(
-                    "%30s  %30s  %30s  %30s  %30s  %30s\n", "CourseID", "CourseName", "CourseDescription", "ProfessorID", "CourseFee", "StudentCount"
+                    "%-30s  %-30s  %-30s  %-30s  %-30s  %-30s\n", "CourseID", "CourseName", "CourseDescription", "ProfessorID", "CourseFee", "StudentCount"
             );
+            fmt.format(HelperMethods.repeat("-", 180) + "\n");
             for (Course c : courses) {
                 fmt.format(
-                        "%30s  %30s  %30s  %30s  %30s  %30s\n",
+                        "%-30s  %-30s  %-30s  %-30s  %-30s  %-30s\n",
                         c.getCourseId(),
                         c.getCourseName(),
                         c.getCourseDescription(),
@@ -114,6 +117,7 @@ public class AdminClient {
                 );
 
             }
+            fmt.format(HelperMethods.repeat("-", 180) + "\n");
             System.out.println(fmt);
         }
     }
@@ -200,10 +204,13 @@ public class AdminClient {
             logger.info("No Professors registered");
         } else {
             Formatter fmt = new Formatter();
-            fmt.format("%30s %30s %30s %30s %30s\n", "ProfId", "ProfName", "ProfEmail ID", "ProfDepartment", "ProfDesignation");
+            fmt.format(HelperMethods.repeat("-", 150) + "\n");
+            fmt.format("%-30s %-30s %-30s %-30s %-30s\n", "ProfId", "ProfName", "ProfEmail ID", "ProfDepartment", "ProfDesignation");
+            fmt.format(HelperMethods.repeat("-", 150) + "\n");
             for (Professor p : professors) {
-                fmt.format("%30s %30s %30s %30s %30s\n", p.getProfessorId(), p.getUserName(), p.getUserEmailId(), p.getDepartment(), p.getDesignation());
+                fmt.format("%-30s %-30s %-30s %-30s %-30s\n", p.getProfessorId(), p.getUserName(), p.getUserEmailId(), p.getDepartment(), p.getDesignation());
             }
+            fmt.format(HelperMethods.repeat("-", 150) + "\n");
             System.out.println(fmt);
         }
     }
@@ -217,10 +224,13 @@ public class AdminClient {
             logger.info("No pending addmission requests");
         } else {
             Formatter fmt = new Formatter();
-            fmt.format("%30s %30s %30s\n", "StudentID", "StudentName", "StudentEmailId");
+            fmt.format(HelperMethods.repeat("-", 90) + "\n");
+            fmt.format("%-30s %-30s %-30s\n", "StudentID", "StudentName", "StudentEmailId");
+            fmt.format(HelperMethods.repeat("-", 90) + "\n");
             for (Student st : admissionRequests) {
-                fmt.format("%30s %30s %30s\n", st.getStudentId(), st.getUserName(), st.getUserEmailId());
+                fmt.format("%-30s %-30s %-30s\n", st.getStudentId(), st.getUserName(), st.getUserEmailId());
             }
+            fmt.format(HelperMethods.repeat("-", 90) + "\n");
             System.out.println(fmt);
         }
     }

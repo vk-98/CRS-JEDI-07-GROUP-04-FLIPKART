@@ -3,6 +3,7 @@ package com.flipkart.application;
 import com.flipkart.bean.OptedCourse;
 import com.flipkart.business.SemesterRegistrationInterface;
 import com.flipkart.business.SemesterRegistrationOperation;
+import com.flipkart.utils.HelperMethods;
 import org.apache.log4j.Logger;
 
 import java.util.Formatter;
@@ -118,16 +119,19 @@ public class SemesterClient {
         List<OptedCourse> courses = semesterRegistrationInterface.getSelectedCourses();
 
         if (courses == null || courses.size() == 0) {
-            logger.info("### No registered courses to show");
+            logger.info("### No selected courses to show");
             return;
         }
-        System.out.println("** Registered courses **");
+        System.out.println("*********** Selected courses **********");
 
         Formatter fmt = new Formatter();
-        fmt.format("%20s %20s\n", "CourseId", "IsPrimary");
+        fmt.format(HelperMethods.repeat("-", 40) + "\n");
+        fmt.format("%-20s %-20s\n", "CourseId", "IsPrimary");
+        fmt.format(HelperMethods.repeat("-", 40) + "\n");
         for (OptedCourse course : courses) {
-            fmt.format("%20s %20s\n", course.getCourseId(), course.isPrimary());
+            fmt.format("%-20s %-20s\n", course.getCourseId(), course.isPrimary());
         }
+        fmt.format(HelperMethods.repeat("-", 40) + "\n");
         System.out.println(fmt);
     }
 
@@ -136,18 +140,21 @@ public class SemesterClient {
      */
     private void handleShowRegisteredCourses() {
         List<OptedCourse> courses = semesterRegistrationInterface.getRegisteredCourses();
-
         if (courses == null || courses.size() == 0) {
             logger.info("### No registered courses to show");
             return;
         }
-        System.out.println("** Registered courses **");
+        System.out.println("*********** Registered courses **********");
 
         Formatter fmt = new Formatter();
-        fmt.format("%20s %20s\n", "CourseId", "IsPrimary");
+        fmt.format(HelperMethods.repeat("-", 40) + "\n");
+        fmt.format("%-20s %-20s\n", "CourseId", "IsPrimary");
+        fmt.format(HelperMethods.repeat("-", 40) + "\n");
         for (OptedCourse course : courses) {
-            fmt.format("%20s %20s\n", course.getCourseId(), course.isPrimary());
+            fmt.format("%-20s %-20s\n", course.getCourseId(), course.isPrimary());
         }
+        fmt.format(HelperMethods.repeat("-", 40) + "\n");
+        System.out.println(fmt);
     }
 
     /**

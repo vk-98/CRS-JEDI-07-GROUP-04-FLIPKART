@@ -2,7 +2,6 @@ package com.flipkart.business;
 
 import com.flipkart.bean.Grade;
 import com.flipkart.bean.Student;
-import com.flipkart.exceptions.StudentNotRegisteredException;
 
 import java.util.List;
 

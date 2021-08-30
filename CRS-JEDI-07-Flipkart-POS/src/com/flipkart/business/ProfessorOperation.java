@@ -5,7 +5,7 @@ import com.flipkart.bean.Professor;
 import com.flipkart.bean.Student;
 import com.flipkart.dao.ProfessorDaoInterface;
 import com.flipkart.dao.ProfessorDaoOperation;
-import com.flipkart.exceptions.CourseNotSelectedExcpetion;
+import com.flipkart.exceptions.*;
 import org.apache.log4j.Logger;
 
 import java.util.Formatter;
@@ -37,23 +37,26 @@ public class ProfessorOperation implements ProfessorInterface {
      */
     @Override
     public boolean addGrade(int studentId, int courseId, double grade) {
+
         try {
             boolean courseSelected = professorDaoInterface.isCourseSelected(professor.getProfessorId(), courseId);
             if (!courseSelected) {
-                throw new CourseNotSelectedExcpetion(courseId);
+                throw new CourseNotSelectedException(courseId);
             }
             boolean isStudentEnrolled = professorDaoInterface.isStudentEnrolled(studentId, courseId);
             if (!isStudentEnrolled) {
-                logger.info("Student Not Enrolled in the course");
-                return false;
+                throw new StudentNotEnrolledInCourseException(courseId, studentId);
             }
             boolean studentGraded = professorDaoInterface.isStudentAlreadyGraded(studentId, courseId);
             if (studentGraded) {
-                logger.info("Student Is Already Graded");
-                return false;
+                throw new StudentAlreadyGradedException(studentId, courseId);
             }
             return professorDaoInterface.addGrade(studentId, courseId, grade);
-        } catch (CourseNotSelectedExcpetion e) {
+        } catch (CourseNotSelectedException e) {
+            logger.info(e.getMessage());
+        } catch (StudentNotEnrolledInCourseException e) {
+            logger.info(e.getMessage());
+        } catch (StudentAlreadyGradedException e) {
             logger.info(e.getMessage());
         }
         return false;
@@ -67,13 +70,16 @@ public class ProfessorOperation implements ProfessorInterface {
      */
     @Override
     public List<Student> getEnrolledStudents(int courseId) {
-        // Exception
-        boolean courseSelected = professorDaoInterface.isCourseSelected(professor.getProfessorId(), courseId);
-        if (courseSelected) {
+        try {
+            boolean courseSelected = professorDaoInterface.isCourseSelected(professor.getProfessorId(), courseId);
+            if (!courseSelected) {
+                throw new CourseNotSelectedExcpetion(courseId);
+            }
             return professorDaoInterface.getEnrolledStudents(courseId);
+        } catch (CourseNotSelectedExcpetion e) {
+            logger.info("Error: " + e.getMessage());
         }
         return null;
-//            logger.info("Enter Correct Course Id");
     }
 
     /**
@@ -94,16 +100,19 @@ public class ProfessorOperation implements ProfessorInterface {
      */
     @Override
     public boolean selectCourse(int courseId) {
-        // Exception
-        boolean courseAvailable = professorDaoInterface.isCourseAvailable(courseId);
-        if (courseAvailable) {
+        try {
+            boolean courseAvailable = professorDaoInterface.isCourseAvailable(courseId);
+            if (!courseAvailable) {
+                throw new CourseNotAvailableException(courseId);
+            }
             boolean isCourseSelected = professorDaoInterface.selectCourse(professor.getProfessorId(), courseId);
             if (isCourseSelected) {
                 return true;
             }
+        } catch (CourseNotAvailableException e) {
+            logger.info("Error: " + e.getMessage());
         }
         return false;
-        //logger.info("Course with course Id: " + courseId + " cannot be selected.");
     }
 
     /**
@@ -114,16 +123,19 @@ public class ProfessorOperation implements ProfessorInterface {
      */
     @Override
     public boolean deselectCourse(int courseId) {
-        // Exception
-        boolean isCourseSelected = professorDaoInterface.isCourseSelected(professor.getProfessorId(), courseId);
-        if (isCourseSelected) {
+        try {
+            boolean isCourseSelected = professorDaoInterface.isCourseSelected(professor.getProfessorId(), courseId);
+            if (!isCourseSelected) throw new CourseNotSelectedExcpetion(courseId);
+
             boolean isCourseDeselected = professorDaoInterface.deselectCourse(courseId);
             if (isCourseDeselected) {
                 return true;
             }
+
+        } catch (CourseNotSelectedExcpetion e) {
+            logger.info("Error: " + e.getMessage());
         }
         return false;
-        //logger.info("Course with course Id: " + courseId + " cannot be deselected.");
     }
 
     /**

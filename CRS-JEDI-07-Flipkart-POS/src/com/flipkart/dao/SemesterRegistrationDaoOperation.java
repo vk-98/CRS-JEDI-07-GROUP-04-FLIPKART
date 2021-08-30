@@ -3,6 +3,7 @@ package com.flipkart.dao;
 import com.flipkart.bean.Course;
 import com.flipkart.bean.OptedCourse;
 import com.flipkart.business.StudentOperation;
+import com.flipkart.constants.Courses;
 import com.flipkart.constants.SqlQueries;
 import com.flipkart.utils.DBUtil;
 import org.apache.log4j.Logger;
@@ -97,7 +98,7 @@ public class SemesterRegistrationDaoOperation implements SemesterRegistrationDao
             ps.setInt(1, courseId);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-                return rs.getInt("studentCount") < 10;
+                return rs.getInt("studentCount") < Courses.MAX_STUDENT_LIMIT;
             }
         } catch (SQLException e) {
             logger.info("Error: " + e.getMessage());
@@ -134,17 +135,17 @@ public class SemesterRegistrationDaoOperation implements SemesterRegistrationDao
      * @return returns true if the course is added successfully
      */
     @Override
-    public boolean addCourse(int courseId, int semesterId, int isPrimary) {
+    public boolean addCourse(int courseId, int semesterId, int isPrimary, int studentId) {
 
         try {
             PreparedStatement ps = conn.prepareStatement(SqlQueries.ADD_COURSE_STUDENT);
             ps.setInt(1, courseId);
             ps.setInt(2, semesterId);
             ps.setInt(3, isPrimary);
-            ps.setInt(4, StudentOperation.student.getStudentId());
+            ps.setInt(4, studentId);
             return ps.executeUpdate() == 1;
         } catch (SQLException e) {
-            logger.info("Erros: " + e.getMessage());
+            logger.info("Error: " + e.getMessage());
         }
         return false;
     }
@@ -157,11 +158,11 @@ public class SemesterRegistrationDaoOperation implements SemesterRegistrationDao
      * @return returns true if the course is dropped successfully
      */
     @Override
-    public boolean dropCourse(int courseId) {
+    public boolean dropCourse(int courseId, int studentId) {
         try {
 
             PreparedStatement ps = conn.prepareStatement(SqlQueries.DROP_COURSE);
-            ps.setInt(1, StudentOperation.student.getStudentId());
+            ps.setInt(1, studentId);
             ps.setInt(2, courseId);
 
             int rowAffected = ps.executeUpdate();
@@ -212,10 +213,10 @@ public class SemesterRegistrationDaoOperation implements SemesterRegistrationDao
      * @return List of Registered Courses
      */
     @Override
-    public List<OptedCourse> getRegisteredCourses() {
+    public List<OptedCourse> getRegisteredCourses(int studentId) {
         try {
             PreparedStatement ps = conn.prepareStatement(SqlQueries.VIEW_REGISTERED_STUDENT_COURSES);
-            ps.setInt(1, StudentOperation.student.getStudentId());
+            ps.setInt(1, studentId);
             ResultSet rs = ps.executeQuery();
             List<OptedCourse> registeredCourseList = new ArrayList<OptedCourse>();
 
@@ -243,11 +244,11 @@ public class SemesterRegistrationDaoOperation implements SemesterRegistrationDao
      * @return List of Selected Courses
      */
     @Override
-    public List<OptedCourse> getSelectedCourses() {
+    public List<OptedCourse> getSelectedCourses(int studentId) {
         try {
 
             PreparedStatement ps = conn.prepareStatement(SqlQueries.VIEW_SELECTED_STUDENT_COURSES);
-            ps.setInt(1, StudentOperation.student.getStudentId());
+            ps.setInt(1, studentId);
             ResultSet rs = ps.executeQuery();
             List<OptedCourse> registeredCourseList = new ArrayList<OptedCourse>();
 
@@ -326,7 +327,7 @@ public class SemesterRegistrationDaoOperation implements SemesterRegistrationDao
                 ResultSet rs2 = ps.executeQuery();
 
                 if (rs2.next()) {
-                    if (rs2.getInt(1) > 10)
+                    if (rs2.getInt(1) > Courses.MAX_STUDENT_PER_COURSE)
                         return courseId;
                 }
             }
@@ -369,10 +370,10 @@ public class SemesterRegistrationDaoOperation implements SemesterRegistrationDao
      * @return returns true if course is already registered or not
      */
     @Override
-    public boolean isCourseAlreadyRegistered(int courseId) {
+    public boolean isCourseAlreadyRegistered(int courseId, int studentId) {
         try {
             PreparedStatement ps = conn.prepareStatement(SqlQueries.CHECK_COURSE_STUDENT);
-            ps.setInt(1, StudentOperation.student.getStudentId());
+            ps.setInt(1, studentId);
             ps.setInt(2, courseId);
 
             ResultSet rs = ps.executeQuery();
@@ -416,10 +417,10 @@ public class SemesterRegistrationDaoOperation implements SemesterRegistrationDao
      * @return returns true if Payment is done successfully by the student
      */
     @Override
-    public boolean getPaymentStatus() {
+    public boolean getPaymentStatus(int studentId) {
         try {
             PreparedStatement ps = conn.prepareStatement(SqlQueries.GET_PAYMENT_STATUS);
-            ps.setInt(1, StudentOperation.student.getStudentId());
+            ps.setInt(1, studentId);
             ResultSet rs = ps.executeQuery();
             if (rs.next())
                 return rs.getInt(1) == 1;
@@ -488,11 +489,11 @@ public class SemesterRegistrationDaoOperation implements SemesterRegistrationDao
      * @return returns true if course is allotted successfully
      */
     @Override
-    public boolean allotCourse(int courseId) {
+    public boolean allotCourse(int courseId, int studentId) {
         try {
             PreparedStatement ps = conn.prepareStatement(SqlQueries.ALLOT_COURSE);
             ps.setInt(1, courseId);
-            ps.setInt(2, StudentOperation.student.getStudentId());
+            ps.setInt(2, studentId);
             return ps.executeUpdate() == 1;
 
         } catch (SQLException e) {
@@ -508,11 +509,11 @@ public class SemesterRegistrationDaoOperation implements SemesterRegistrationDao
      * @return returns true if registration submitted successfully
      */
     @Override
-    public boolean submitRegistration(double courseFee) {
+    public boolean submitRegistration(double courseFee, int studentId) {
         try {
             PreparedStatement ps = conn.prepareStatement(SqlQueries.SUBMIT_REGISTRATION);
             ps.setDouble(1, courseFee);
-            ps.setInt(2, StudentOperation.student.getStudentId());
+            ps.setInt(2, studentId);
             return ps.executeUpdate() == 1;
         } catch (SQLException e) {
             logger.info("Error: " + e.getMessage());
@@ -544,10 +545,10 @@ public class SemesterRegistrationDaoOperation implements SemesterRegistrationDao
      * @return returns the pending fee
      */
     @Override
-    public double getPendingFee() {
+    public double getPendingFee(int studentId) {
         try {
             PreparedStatement ps = conn.prepareStatement(SqlQueries.GET_PENDING_FEE);
-            ps.setInt(1, StudentOperation.student.getStudentId());
+            ps.setInt(1, studentId);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 if (rs.getInt("feeStatus") == 0 && rs.getInt("registrationStatus") == 1) {
@@ -568,10 +569,10 @@ public class SemesterRegistrationDaoOperation implements SemesterRegistrationDao
      */
 
     @Override
-    public boolean payFee(double amount) {
+    public boolean payFee(double amount, int studentId) {
         try {
             PreparedStatement ps = conn.prepareStatement(SqlQueries.PAY_FEE);
-            ps.setInt(1, StudentOperation.student.getStudentId());
+            ps.setInt(1, studentId);
             return ps.executeUpdate() == 1;
         } catch (SQLException e) {
             logger.info("Error: " + e.getMessage());

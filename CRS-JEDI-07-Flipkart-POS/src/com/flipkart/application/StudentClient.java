@@ -4,6 +4,7 @@ import com.flipkart.bean.Course;
 import com.flipkart.bean.Grade;
 import com.flipkart.bean.Notification;
 import com.flipkart.business.*;
+import com.flipkart.utils.HelperMethods;
 import org.apache.log4j.Logger;
 
 import java.util.Formatter;
@@ -108,12 +109,14 @@ public class StudentClient {
             logger.info("No Available Courses");
         } else {
             Formatter fmt = new Formatter();
+            fmt.format(HelperMethods.repeat("-", 180) + "\n");
             fmt.format(
-                    "%30s  %30s  %30s  %30s  %30s  %30s\n", "CourseID", "CourseName", "CourseDescription", "ProfessorID", "CourseFee", "StudentCount"
+                    "%-30s  %-30s  %-30s  %-30s  %-30s  %-30s\n", "CourseID", "CourseName", "CourseDescription", "ProfessorID", "CourseFee", "StudentCount"
             );
+            fmt.format(HelperMethods.repeat("-", 180) + "\n");
             for (Course c : courses) {
                 fmt.format(
-                        "%30s  %30s  %30s  %30s  %30s  %30s\n",
+                        "%-30s  %-30s  %-30s  %-30s  %-30s  %-30s\n",
                         c.getCourseId(),
                         c.getCourseName(),
                         c.getCourseDescription(),
@@ -121,8 +124,8 @@ public class StudentClient {
                         c.getCourseFee(),
                         c.getStudentCount()
                 );
-
             }
+            fmt.format(HelperMethods.repeat("-", 180) + "\n");
             System.out.println(fmt);
         }
     }
@@ -155,12 +158,15 @@ public class StudentClient {
         } else {
             System.out.println("********************* GRADE CARD *********************");
             Formatter fmt = new Formatter();
-            fmt.format("%10s %20s %10s\n", "CourseId", "CourseName", "GPA");
+            fmt.format(HelperMethods.repeat("-", 40) + "\n");
+            fmt.format("%-10s %-20s %-10s\n", "CourseId", "CourseName", "GPA");
+            fmt.format(HelperMethods.repeat("-", 40) + "\n");
             double totalGrades = 0;
             for (Grade grade : grades) {
-                fmt.format("%10s %20s %10s\n", grade.getCourseId(), grade.getCourseName(), grade.getGpa());
+                fmt.format("%-10s %-20s %-10s\n", grade.getCourseId(), grade.getCourseName(), grade.getGpa());
                 totalGrades += grade.getGpa();
             }
+            fmt.format(HelperMethods.repeat("-", 40) + "\n");
             System.out.println(fmt);
             double cgpa = totalGrades / grades.size();
             System.out.println("Your CGPA is " + cgpa);
@@ -176,10 +182,13 @@ public class StudentClient {
             logger.info("No Notification at the moment.");
         } else {
             Formatter fmt = new Formatter();
-            fmt.format("%20s %30s\n", "NotificationId", "NotificationContent");
+            fmt.format(HelperMethods.repeat("-", 70) + "\n");
+            fmt.format("%-20s %-50s\n", "NotificationId", "NotificationContent");
+            fmt.format(HelperMethods.repeat("-", 70) + "\n");
             for (Notification notification : notifications) {
-                fmt.format("%20s %30s\n", notification.getNotificationId(), notification.getContent());
+                fmt.format("%-20s %-50s\n", notification.getNotificationId(), notification.getContent());
             }
+            fmt.format(HelperMethods.repeat("-", 70) + "\n");
             System.out.println(fmt);
         }
     }

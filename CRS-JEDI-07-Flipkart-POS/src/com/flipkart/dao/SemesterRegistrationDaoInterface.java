@@ -59,7 +59,7 @@ public interface SemesterRegistrationDaoInterface {
      * @param isPrimary  Indicates if the course is primary or not
      * @return returns true if the course is added successfully
      */
-    public boolean addCourse(int courseId, int semesterId, int isPrimary);
+    public boolean addCourse(int courseId, int semesterId, int isPrimary, int studentId);
 
     /**
      * Method to Drop Course
@@ -67,7 +67,7 @@ public interface SemesterRegistrationDaoInterface {
      * @param courseId unique Id to represent a course
      * @return returns true if the course is dropped successfully
      */
-    public boolean dropCourse(int courseId);
+    public boolean dropCourse(int courseId, int studentId);
 
     /**
      * Method to View all the courses
@@ -82,14 +82,14 @@ public interface SemesterRegistrationDaoInterface {
      * @return List of Registered Courses
      */
 
-    public List<OptedCourse> getRegisteredCourses();
+    public List<OptedCourse> getRegisteredCourses(int studentId);
 
     /**
      * Method to Get List of Selected  courses of the Student for a semester
      *
      * @return List of Selected Courses
      */
-    public List<OptedCourse> getSelectedCourses();
+    public List<OptedCourse> getSelectedCourses(int studentId);
 
     /**
      * Method to get count of Primary and Secondary courses of a student for a Semester
@@ -122,7 +122,7 @@ public interface SemesterRegistrationDaoInterface {
      * @param courseId unique Id to represent a course
      * @return returns true if course is already registered or not
      */
-    public boolean isCourseAlreadyRegistered(int courseId);
+    public boolean isCourseAlreadyRegistered(int courseId, int studentId);
 
     /**
      * Method to get registration status of a student for a semester
@@ -138,7 +138,7 @@ public interface SemesterRegistrationDaoInterface {
      *
      * @return returns true if Payment is done successfully by the student
      */
-    public boolean getPaymentStatus();
+    public boolean getPaymentStatus(int studentId);
 
     /**
      * Method to Set Registration status of the student
@@ -166,7 +166,7 @@ public interface SemesterRegistrationDaoInterface {
      * @param courseId unique Id to represent a course
      * @return returns true if course is allotted successfully
      */
-    public boolean allotCourse(int courseId);
+    public boolean allotCourse(int courseId, int studentId);
 
     /**
      * Method to Submit Registration
@@ -174,7 +174,7 @@ public interface SemesterRegistrationDaoInterface {
      * @param courseFee Fee assigned to a course
      * @return returns true if registration submitted successfully
      */
-    public boolean submitRegistration(double courseFee);
+    public boolean submitRegistration(double courseFee, int studentId);
 
     /**
      * Method to Update Student count for a course
@@ -189,7 +189,7 @@ public interface SemesterRegistrationDaoInterface {
      *
      * @return returns the pending fee
      */
-    public double getPendingFee();
+    public double getPendingFee(int studentId);
 
     /**
      * Method to Pay fee
@@ -197,6 +197,6 @@ public interface SemesterRegistrationDaoInterface {
      * @param amount Amount to be paid
      * @return returns true if payment is successful
      */
-    public boolean payFee(double amount);
+    public boolean payFee(double amount, int studentId);
 
 }

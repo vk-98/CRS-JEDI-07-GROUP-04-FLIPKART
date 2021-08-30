@@ -3,6 +3,7 @@ package com.flipkart.business;
 import com.flipkart.bean.Grade;
 import com.flipkart.bean.Student;
 import com.flipkart.dao.*;
+import com.flipkart.exceptions.PaymentIncompleteException;
 import com.flipkart.exceptions.StudentNotRegisteredException;
 import org.apache.log4j.Logger;
 
@@ -53,16 +54,21 @@ public class StudentOperation implements StudentInterface {
      */
     @Override
     public List<Grade> getGrades() {
-        boolean isRegistered = semesterRegistrationDaoInterface.getRegistrationStatus();
-        if (!isRegistered) {
-            logger.info("Student is not registered for the semester");
-            return null;
-        }
+        try {
+            boolean isRegistered = semesterRegistrationDaoInterface.getRegistrationStatus();
+            if (!isRegistered) {
+                throw new StudentNotRegisteredException(StudentOperation.student.getUserName());
+            }
 
-        boolean paymentStatus = semesterRegistrationDaoInterface.getPaymentStatus();
-        if (paymentStatus) {
-            System.out.println("yaha1");
+            boolean paymentStatus = semesterRegistrationDaoInterface.getPaymentStatus(StudentOperation.student.getStudentId());
+            if (!paymentStatus) throw new PaymentIncompleteException(StudentOperation.student.getUserName());
+
             return studentDaoInterface.getGrades(StudentOperation.student.getStudentId());
+
+        } catch (StudentNotRegisteredException e) {
+            logger.info(e.getMessage());
+        } catch (PaymentIncompleteException e) {
+            logger.info(e.getMessage());
         }
         return null;
     }

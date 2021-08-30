@@ -6,6 +6,7 @@ import com.flipkart.business.ProfessorInterface;
 import com.flipkart.business.ProfessorOperation;
 import com.flipkart.business.UserInterface;
 import com.flipkart.business.UserOperation;
+import com.flipkart.utils.HelperMethods;
 import org.apache.log4j.Logger;
 
 import java.util.Formatter;
@@ -94,10 +95,13 @@ public class ProfessorClient {
             logger.info("No Courses available");
         } else {
             Formatter fmt = new Formatter();
-            fmt.format("%30s %30s %30s %30s %30s\n", "CourseId", "CourseName", "CourseDescription", "CourseFee", "StudentCount");
+            fmt.format(HelperMethods.repeat("-", 150) + "\n");
+            fmt.format("%-30s %-30s %-30s %-30s %-30s\n", "CourseId", "CourseName", "CourseDescription", "CourseFee", "StudentCount");
+            fmt.format(HelperMethods.repeat("-", 150) + "\n");
             for (Course c : courses) {
-                fmt.format("%30s %30s %30s %30s %30s\n", c.getCourseId(), c.getCourseName(), c.getCourseDescription(), c.getCourseFee(), c.getStudentCount());
+                fmt.format("%-30s %-30s %-30s %-30s %-30s\n", c.getCourseId(), c.getCourseName(), c.getCourseDescription(), c.getCourseFee(), c.getStudentCount());
             }
+            fmt.format(HelperMethods.repeat("-", 150) + "\n");
             System.out.println(fmt);
         }
     }
@@ -115,11 +119,13 @@ public class ProfessorClient {
             logger.info("No Students enrolled in courseId: " + courseId + ".");
         } else {
             Formatter fmt = new Formatter();
-            fmt.format("%30s %30s %30s %30s\n", "StudentId", "StudentName", "StudentEmailID", "StudentPhone");
+            fmt.format(HelperMethods.repeat("-", 120) + "\n");
+            fmt.format("%-30s %-30s %-30s %-30s\n", "StudentId", "StudentName", "StudentEmailID", "StudentPhone");
+            fmt.format(HelperMethods.repeat("-", 120) + "\n");
             for (Student student : students) {
-                fmt.format("%30s %30s %30s %30s\n", student.getStudentId(), student.getUserEmailId(), student.getUserEmailId(), student.getPhoneNo());
-
+                fmt.format("%-30s %-30s %-30s %-30s\n", student.getStudentId(), student.getUserEmailId(), student.getUserEmailId(), student.getPhoneNo());
             }
+            fmt.format(HelperMethods.repeat("-", 120) + "\n");
             System.out.println(fmt);
         }
     }
@@ -157,10 +163,13 @@ public class ProfessorClient {
             logger.info("No Courses available");
         } else {
             Formatter fmt = new Formatter();
-            fmt.format("%30s %30s %30s %30s %30s\n", "CourseId", "CourseName", "CourseDescription", "CourseFee", "StudentCount");
+            fmt.format(HelperMethods.repeat("-", 150) + "\n");
+            fmt.format("%-30s %-30s %-30s %-30s %-30s\n", "CourseId", "CourseName", "CourseDescription", "CourseFee", "StudentCount");
+            fmt.format(HelperMethods.repeat("-", 150) + "\n");
             for (Course c : courses) {
-                fmt.format("%30s %30s %30s %30s %30s\n", c.getCourseId(), c.getCourseName(), c.getCourseDescription(), c.getCourseFee(), c.getStudentCount());
+                fmt.format("%-30s %-30s %-30s %-30s %-30s\n", c.getCourseId(), c.getCourseName(), c.getCourseDescription(), c.getCourseFee(), c.getStudentCount());
             }
+            fmt.format(HelperMethods.repeat("-", 150) + "\n");
             System.out.println(fmt);
         }
     }

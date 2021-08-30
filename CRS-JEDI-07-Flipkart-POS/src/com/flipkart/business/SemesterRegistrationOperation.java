@@ -1,17 +1,12 @@
 package com.flipkart.business;
 
 import com.flipkart.bean.OptedCourse;
-import com.flipkart.dao.NotificationDaoInterface;
-import com.flipkart.dao.NotificationDaoOperation;
+import com.flipkart.constants.Courses;
 import com.flipkart.dao.SemesterRegistrationDaoInterface;
 import com.flipkart.dao.SemesterRegistrationDaoOperation;
-import com.flipkart.exceptions.CourseCountException;
-import com.flipkart.exceptions.NoRegisteredCourseException;
-import com.flipkart.exceptions.SeatNotAvailableException;
+import com.flipkart.exceptions.*;
 import org.apache.log4j.Logger;
 
-import java.sql.SQLException;
-import java.util.Formatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,51 +31,63 @@ public class SemesterRegistrationOperation implements SemesterRegistrationInterf
      */
     @Override
     public boolean addCourse(int courseId, int isPrimary) {
-        // Exception
-        boolean isRegistered = semesterRegistrationDaoInterface.getRegistrationStatus();
 
-        if (isRegistered) {
-            logger.info("Student already registered for the semester");
-            return false;
-        }
+        try {
+            boolean isRegistered = semesterRegistrationDaoInterface.getRegistrationStatus();
 
-        if (isPrimary == 1) {
-            int primaryCourseCount = semesterRegistrationDaoInterface.getCourseCount(1);
-            if (primaryCourseCount >= 4) {
-                logger.info("4 Primary Courses already selected.");
-                return false;
+            if (isRegistered) {
+                throw new StudentAlreadyRegisteredForSemesterException();
             }
-        } else {
-            int secondaryCourseCount = semesterRegistrationDaoInterface.getCourseCount(0);
-            if (secondaryCourseCount >= 2) {
-                logger.info("2 secondary Courses already selected.");
-                return false;
+
+            if (isPrimary == 1) {
+                int primaryCourseCount = semesterRegistrationDaoInterface.getCourseCount(1);
+                if (primaryCourseCount >= Courses.MAX_PRIMARY_COURSES) {
+                    throw new MaxCoursesAlreadySelectedException(Courses.MAX_PRIMARY_COURSES, "primary");
+                }
+            } else {
+                int secondaryCourseCount = semesterRegistrationDaoInterface.getCourseCount(0);
+                if (secondaryCourseCount >= Courses.MAX_SECONDARY_COURSES) {
+                    throw new MaxCoursesAlreadySelectedException(Courses.MAX_SECONDARY_COURSES, "secondary");
+                }
             }
-        }
-        boolean isCourseAlreadyRegistered = semesterRegistrationDaoInterface.isCourseAlreadyRegistered(courseId);
+            boolean isCourseAlreadyRegistered = semesterRegistrationDaoInterface.isCourseAlreadyRegistered(courseId, StudentOperation.student.getStudentId());
 
-        if (isCourseAlreadyRegistered) {
-            logger.info("Course already registered");
-            return false;
-        }
-
-        boolean isAvailable = semesterRegistrationDaoInterface.checkAvailability(courseId);
-
-        if (!isAvailable) {
-            logger.info("Maximum limit of students for courseId " + courseId + " reached.");
-            return false;
-        }
-
-        int semesterId = semesterRegistrationDaoInterface.getSemesterId();
-
-        if (semesterId == 0) {
-            boolean registered = semesterRegistrationDaoInterface.registerForSemester();
-            if (registered) {
-                semesterId = semesterRegistrationDaoInterface.getSemesterId();
+            if (isCourseAlreadyRegistered) {
+                throw new CourseAlreadyRegisteredException(courseId);
             }
+
+            boolean isAvailable = semesterRegistrationDaoInterface.checkAvailability(courseId);
+
+            if (!isAvailable) {
+                throw new SeatNotAvailableException(courseId);
+            }
+
+            int semesterId = semesterRegistrationDaoInterface.getSemesterId();
+
+            if (semesterId == 0) {
+                boolean registered = semesterRegistrationDaoInterface.registerForSemester();
+                if (registered) {
+                    semesterId = semesterRegistrationDaoInterface.getSemesterId();
+                }
+            }
+
+            boolean courseAdded = semesterRegistrationDaoInterface.addCourse(courseId, semesterId, isPrimary, StudentOperation.student.getStudentId());
+
+            if (courseAdded) {
+                logger.info("Successfully added course");
+                return true;
+            }
+        } catch (StudentAlreadyRegisteredForSemesterException e) {
+            logger.info(e.getMessage());
+        } catch (MaxCoursesAlreadySelectedException e) {
+            logger.info(e.getMessage());
+        } catch (CourseAlreadyRegisteredException e) {
+            logger.info(e.getMessage());
+        } catch (SeatNotAvailableException e) {
+            logger.info(e.getMessage());
         }
 
-        return semesterRegistrationDaoInterface.addCourse(courseId, semesterId, isPrimary);
+        return false;
     }
 
 
@@ -92,19 +99,22 @@ public class SemesterRegistrationOperation implements SemesterRegistrationInterf
      */
     @Override
     public boolean dropCourse(int courseId) {
-        // Exception
-        boolean isRegistered = semesterRegistrationDaoInterface.getRegistrationStatus();
+        try {
+            boolean isRegistered = semesterRegistrationDaoInterface.getRegistrationStatus();
+            if (isRegistered) {
+                throw new StudentAlreadyRegisteredForSemesterException();
+            }
+            boolean isCourseRegistered = semesterRegistrationDaoInterface.isCourseAlreadyRegistered(courseId, StudentOperation.student.getStudentId());
+            if (!isCourseRegistered) throw new CourseNotRegisteredByStudentException(courseId);
 
-        if (isRegistered) {
-            logger.info("Student already registered for the semester");
-            return false;
-        }
-        boolean isCourseRegistered = semesterRegistrationDaoInterface.isCourseAlreadyRegistered(courseId);
-
-        if (isCourseRegistered) {
-            return semesterRegistrationDaoInterface.dropCourse(courseId);
-        } else {
-            logger.info("Course is not registered");
+            boolean courseDropped = semesterRegistrationDaoInterface.dropCourse(courseId, StudentOperation.student.getStudentId());
+            if (courseDropped) {
+                return true;
+            }
+        } catch (StudentAlreadyRegisteredForSemesterException e) {
+            logger.info(e.getMessage());
+        } catch (CourseNotRegisteredByStudentException e) {
+            logger.info(e.getMessage());
         }
         return false;
     }
@@ -117,7 +127,7 @@ public class SemesterRegistrationOperation implements SemesterRegistrationInterf
      */
     @Override
     public List<OptedCourse> getRegisteredCourses() {
-        return semesterRegistrationDaoInterface.getRegisteredCourses();
+        return semesterRegistrationDaoInterface.getRegisteredCourses(StudentOperation.student.getStudentId());
     }
 
     /**
@@ -127,7 +137,7 @@ public class SemesterRegistrationOperation implements SemesterRegistrationInterf
      */
     @Override
     public List<OptedCourse> getSelectedCourses() {
-        return semesterRegistrationDaoInterface.getSelectedCourses();
+        return semesterRegistrationDaoInterface.getSelectedCourses(StudentOperation.student.getStudentId());
     }
 
 
@@ -146,7 +156,7 @@ public class SemesterRegistrationOperation implements SemesterRegistrationInterf
             return false;
         }
 
-        List<OptedCourse> courses = semesterRegistrationDaoInterface.getSelectedCourses();
+        List<OptedCourse> courses = semesterRegistrationDaoInterface.getSelectedCourses(StudentOperation.student.getStudentId());
         List<OptedCourse> primaryCourse = courses.stream().filter(course -> course.isPrimary()).collect(Collectors.toList());
         List<OptedCourse> secondaryCourse = courses.stream().filter(course -> !course.isPrimary()).collect(Collectors.toList());
 
@@ -162,8 +172,8 @@ public class SemesterRegistrationOperation implements SemesterRegistrationInterf
                         + secondaryCourse.size()
                         + "secondary courses."
         );
-        if (courses.size() < 6) {
-            logger.info("Please Select 4 Primary and 2 Seconday Courses.");
+        if (courses.size() < Courses.MAX_PRIMARY_COURSES + Courses.MAX_SECONDARY_COURSES) {
+            logger.info("Please Select " + Courses.MAX_PRIMARY_COURSES + " Primary and " + Courses.MAX_SECONDARY_COURSES + " Seconday Courses.");
             return false;
         }
 
@@ -173,7 +183,7 @@ public class SemesterRegistrationOperation implements SemesterRegistrationInterf
         for (OptedCourse course : primaryCourse) {
             boolean isAvailable = semesterRegistrationDaoInterface.checkAvailability(course.getCourseId());
             if (isAvailable) {
-                boolean alloted = semesterRegistrationDaoInterface.allotCourse(course.getCourseId());
+                boolean alloted = semesterRegistrationDaoInterface.allotCourse(course.getCourseId(), StudentOperation.student.getStudentId());
                 if (alloted) {
                     semesterRegistrationDaoInterface.updateStudentCount(course.getCourseId());
                     courseCount += 1;
@@ -183,10 +193,10 @@ public class SemesterRegistrationOperation implements SemesterRegistrationInterf
         }
 
         for (OptedCourse course : secondaryCourse) {
-            if (courseCount < 4) {
+            if (courseCount < Courses.MAX_STUDENT_LIMIT) {
                 boolean isAvailable = semesterRegistrationDaoInterface.checkAvailability(course.getCourseId());
                 if (isAvailable) {
-                    boolean alloted = semesterRegistrationDaoInterface.allotCourse(course.getCourseId());
+                    boolean alloted = semesterRegistrationDaoInterface.allotCourse(course.getCourseId(), StudentOperation.student.getStudentId());
                     if (alloted) {
                         semesterRegistrationDaoInterface.updateStudentCount(course.getCourseId());
                         courseCount += 1;
@@ -197,7 +207,7 @@ public class SemesterRegistrationOperation implements SemesterRegistrationInterf
             }
         }
 
-        boolean submitRegistration = semesterRegistrationDaoInterface.submitRegistration(courseFee);
+        boolean submitRegistration = semesterRegistrationDaoInterface.submitRegistration(courseFee, StudentOperation.student.getStudentId());
 
         String notificationContent = "You have Successfully Registered for the Semester. Please Pay fee $" + courseFee + " ASAP";
         notificationOperation.sendNotification(notificationContent);
@@ -212,7 +222,7 @@ public class SemesterRegistrationOperation implements SemesterRegistrationInterf
      */
     @Override
     public double getPendingFee() {
-        return semesterRegistrationDaoInterface.getPendingFee();
+        return semesterRegistrationDaoInterface.getPendingFee(StudentOperation.student.getStudentId());
     }
 
     /**
@@ -223,7 +233,7 @@ public class SemesterRegistrationOperation implements SemesterRegistrationInterf
      */
     @Override
     public boolean payFee(double amount) {
-        boolean feePayment = semesterRegistrationDaoInterface.payFee(amount);
+        boolean feePayment = semesterRegistrationDaoInterface.payFee(amount, StudentOperation.student.getStudentId());
         if (feePayment) {
             String notificationContent = "Fee Payment Complete Welcome to the CRS.";
             notificationOperation.sendNotification(notificationContent);
